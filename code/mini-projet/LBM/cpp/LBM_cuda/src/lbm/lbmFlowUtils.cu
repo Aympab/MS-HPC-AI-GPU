@@ -15,8 +15,8 @@ void macroscopic(const LBMParams& params,
                  real_t* uy_d)
 {
 
-  const int nx = params.nx;
-  const int ny = params.ny;
+  // const int nx = params.nx;
+  // const int ny = params.ny;
 
   // TODO : call kernel
 
@@ -36,7 +36,22 @@ void equilibrium(const LBMParams& params,
   const int nx = params.nx;
   const int ny = params.ny;
 
+  //64 is the number of CUDA cores in each SM of our GPU
+  if(nx % 64 != 0) throw std::invalid_argument("nx must be divisible by 64");
+
   // TODO : call kernel 
+  /*We want nx/64 * ny blocks, each with 64 threads
+  each thread will do the loop on npop = 9
+  */
+  dim3 gridSize(nx/64,ny); 
+  dim3 blockSize(64);
+
+  // launch the kernel
+  equilibrium_kernel<<<gridSize, blockSize>>>(params, v, t,
+                                              rho_d,
+                                              ux_d,
+                                              uy_d,
+                                              feq_d);
 
 } // equilibrium
 
@@ -68,7 +83,9 @@ void init_obstacle_mask(const LBMParams& params,
     } // end for i
   } // end for j
 
-  // TODO copy host to device
+  // copy host to device
+  CUDA_API_CHECK( cudaMemcpy( obstacle_d, obstacle, nx*ny * sizeof(int),
+                            cudaMemcpyHostToDevice ) );
 
 } // init_obstacle_mask
 
@@ -109,7 +126,15 @@ void initialize_macroscopic_variables(const LBMParams& params,
     } // end for i
   } // end for j
 
-  // TODO : copy host to device
+  // copy host to device
+  CUDA_API_CHECK( cudaMemcpy( rho_d, rho, nx*ny * sizeof(real_t),
+                            cudaMemcpyHostToDevice ) );
+
+  CUDA_API_CHECK( cudaMemcpy( ux_d, ux, nx*ny * sizeof(real_t),
+                            cudaMemcpyHostToDevice ) );
+
+  CUDA_API_CHECK( cudaMemcpy( uy_d, uy, nx*ny * sizeof(real_t),
+                            cudaMemcpyHostToDevice ) );
 
 } // initialize_macroscopic_variables
 
@@ -149,8 +174,8 @@ void compute_collision(const LBMParams& params,
                        real_t* fout_d)
 {
 
-  const int nx = params.nx;
-  const int ny = params.ny;
+  // const int nx = params.nx;
+  // const int ny = params.ny;
 
   // TODO : call kernel
 
@@ -164,8 +189,8 @@ void update_obstacle(const LBMParams &params,
                      real_t* fout_d)
 {
 
-  const int nx = params.nx;
-  const int ny = params.ny;
+  // const int nx = params.nx;
+  // const int ny = params.ny;
 
   // TODO : call kernel
 
@@ -179,8 +204,8 @@ void streaming(const LBMParams& params,
                real_t* fin_d)
 {
 
-  const int nx = params.nx;
-  const int ny = params.ny;
+  // const int nx = params.nx;
+  // const int ny = params.ny;
 
   // TODO : call kernel
 

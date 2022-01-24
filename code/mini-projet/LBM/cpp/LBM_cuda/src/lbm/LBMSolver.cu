@@ -105,7 +105,7 @@ void LBMSolver::run()
   for (int iTime=0; iTime<params.maxIter; ++iTime) {
 
     // if (iTime % 100 == 0) {
-      //output_png(iTime);
+      // output_png(iTime);
       // output_vtk(iTime);
     // }
 

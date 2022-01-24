@@ -21,13 +21,33 @@ void macroscopic_kernel(const LBMParams params,
 __global__ void equilibrium_kernel(const LBMParams params,
                                    const velocity_array_t v,
                                    const weights_t t,
-                                   const real_t *rho_d, 
-                                   const real_t *ux_d,
-                                   const real_t *uy_d, 
-                                   real_t *feq_d)
+                                   const real_t* __restrict rho_d,
+                                   const real_t* __restrict ux_d,
+                                   const real_t* __restrict uy_d,
+                                   real_t* __restrict feq_d)
 {
 
-  // TODO
+  const int nx = params.nx;
+  const int ny = params.ny;
+  const int npop = LBMParams::npop;
+
+  //TODO 
+  
+  int index = 64 * blockIdx.x + threadIdx.x + blockIdx.y * nx;
+
+  real_t usqr = 3.0 / 2 * (ux_d[index] * ux_d[index] +
+                            uy_d[index] * uy_d[index]);
+
+  for (int ipop = 0; ipop < npop; ++ipop) {
+    real_t cu = 3 * (v(ipop,0) * ux_d[index] + 
+                      v(ipop,1) * uy_d[index]);
+
+    int index_f = index + ipop * nx * ny;
+    feq_d[index_f] = rho_d[index] * t(ipop) * (1 + cu + 0.5*cu*cu - usqr);
+  }
+  // printf("Th %d - Block %d,%d, - Index : %d\n",
+  //        threadIdx.x, blockIdx.x, blockIdx.y, index);
+
 
 } // equilibrium_kernel
 
