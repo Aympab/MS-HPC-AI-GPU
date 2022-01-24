@@ -22,9 +22,27 @@ LBMSolver::LBMSolver(const LBMParams& params) :
   const int ny = params.ny;
   const int npop = LBMParams::npop;
 
-  // memory allocations
+  // memory allocations first CPU then GPU
 
-  // TODO
+  // distribution functions
+  fin  = (real_t*) malloc(nx*ny*npop * sizeof(real_t));
+  fout = (real_t*) malloc(nx*ny*npop * sizeof(real_t));
+  feq  = (real_t*) malloc(nx*ny*npop * sizeof(real_t));
+  CUDA_API_CHECK( cudaMalloc((void**)&fin_d, nx*ny*npop * sizeof(real_t)));
+  CUDA_API_CHECK( cudaMalloc((void**)&fout_d, nx*ny*npop * sizeof(real_t)));
+  CUDA_API_CHECK( cudaMalloc((void**)&feq_d, nx*ny*npop * sizeof(real_t)));
+
+  // macroscopic variables
+  rho = (real_t*) malloc(nx*ny * sizeof(real_t));
+  ux  = (real_t*) malloc(nx*ny * sizeof(real_t));
+  uy  = (real_t*) malloc(nx*ny * sizeof(real_t));
+  CUDA_API_CHECK( cudaMalloc((void**)&rho_d, nx*ny * sizeof(real_t)));
+  CUDA_API_CHECK( cudaMalloc((void**)&ux_d, nx*ny * sizeof(real_t)));
+  CUDA_API_CHECK( cudaMalloc((void**)&uy_d, nx*ny * sizeof(real_t)));
+
+  // obstacle
+  obstacle = (int *) malloc(nx*ny * sizeof(int));
+  CUDA_API_CHECK( cudaMalloc((void**)&obstacle_d, nx*ny *sizeof(int)));
 
 } // LBMSolver::LBMSolver
 
@@ -32,9 +50,27 @@ LBMSolver::LBMSolver(const LBMParams& params) :
 // ======================================================
 LBMSolver::~LBMSolver()
 {
-  // free memory
+  // free memory, first GPU then CPU
 
-  // TODO
+  // distribution functions
+  CUDA_API_CHECK( cudaFree(fin_d) );
+  CUDA_API_CHECK( cudaFree(fout_d) );
+  CUDA_API_CHECK( cudaFree(feq_d) );
+  delete[] fin;
+  delete[] fout;
+  delete[] feq;
+
+  // macroscopic variables
+  CUDA_API_CHECK( cudaFree(rho_d) );
+  CUDA_API_CHECK( cudaFree(ux_d) );
+  CUDA_API_CHECK( cudaFree(uy_d) );
+  delete[] rho;
+  delete[] ux;
+  delete[] uy;
+
+  // obstacle
+  CUDA_API_CHECK( cudaFree(obstacle_d) );
+  delete[] obstacle;
 
 } // LBMSolver::~LBMSolver
 
@@ -68,10 +104,10 @@ void LBMSolver::run()
   // time loop
   for (int iTime=0; iTime<params.maxIter; ++iTime) {
 
-    if (iTime % 100 == 0) {
+    // if (iTime % 100 == 0) {
       //output_png(iTime);
-      output_vtk(iTime);
-    }
+      // output_vtk(iTime);
+    // }
 
     // Right wall: outflow condition.
     // we only need here to specify distrib. function for velocities

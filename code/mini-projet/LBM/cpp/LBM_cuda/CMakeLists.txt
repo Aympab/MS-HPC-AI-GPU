@@ -53,13 +53,13 @@ enable_language(CUDA)
 # FindCUDAToolkit.cmake is able to correctly find cuda library
 # either when using nvcc from cuda toolkit or nvc++ from nvhpc
 # only in cmake 3.22.0
-#if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.22.0" )
-#  message("Using CUDAToolkit macros")
-#  find_package(CUDAToolkit REQUIRED)
-#else()
-#  message("Using CUDALibs macros")
-#  find_package(CUDALibs REQUIRED COMPONENTS CUBLAS)
-#endif()
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.22.0" )
+ message("Using CUDAToolkit macros")
+ find_package(CUDAToolkit REQUIRED)
+else()
+ message("Using CUDALibs macros")
+ find_package(CUDALibs REQUIRED COMPONENTS CUBLAS)
+endif()
 
 if(NOT DEFINED CMAKE_CUDA_STANDARD)
   set(CMAKE_CUDA_STANDARD 11)

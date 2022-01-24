@@ -9,6 +9,7 @@
 
 
 #include "lbm/LBMSolver.h" 
+#include "utils/monitoring/SimpleTimer.h"
 
 int main(int argc, char* argv[])
 {
@@ -28,9 +29,13 @@ int main(int argc, char* argv[])
 
   LBMSolver* solver = new LBMSolver(params);
 
+  SimpleTimer* timer = new SimpleTimer;
   solver->run();
+  timer->stop();
+
+  std::cout << timer->elapsed() << std::endl;
+  delete timer;
 
   delete solver;
-
   return EXIT_SUCCESS;
 }
