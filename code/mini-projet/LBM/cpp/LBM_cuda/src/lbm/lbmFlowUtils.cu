@@ -59,6 +59,7 @@ void equilibrium(const LBMParams& params,
                                               uy_d,
                                               feq_d);
 
+  CUDA_KERNEL_CHECK("equilibrium_kernel");
   cudaDeviceSynchronize();
 } // equilibrium
 
@@ -178,7 +179,16 @@ void border_inflow(const LBMParams& params, const real_t* fin_d,
                    real_t* rho_d, real_t* ux_d, real_t* uy_d)
 {
 
-  // TODO : call kernel
+  const int ny = params.ny;
+  
+  dim3 gridSize(ny/64); 
+  dim3 blockSize(64);
+
+  border_inflow_kernel<<<gridSize, blockSize>>>(params, fin_d, rho_d, ux_d, uy_d);
+
+  CUDA_KERNEL_CHECK("border_inflow_kernel");
+  cudaDeviceSynchronize();
+
 } // border_inflow
 
 // ======================================================
@@ -187,8 +197,16 @@ void update_fin_inflow(const LBMParams& params, const real_t* feq_d,
                        real_t* fin_d)
 {
 
-  // TODO : call kernel
+  const int ny = params.ny;
+  
+  dim3 gridSize(ny/64); 
+  dim3 blockSize(64);
 
+  update_fin_inflow_kernel<<<gridSize, blockSize>>>(params, feq_d, fin_d);
+
+
+  CUDA_KERNEL_CHECK("update_fin_inflow_kernel");
+  cudaDeviceSynchronize();
 } // update_fin_inflow
   
 // ======================================================
@@ -199,10 +217,20 @@ void compute_collision(const LBMParams& params,
                        real_t* fout_d)
 {
 
-  // const int nx = params.nx;
-  // const int ny = params.ny;
+  const int nx = params.nx;
+  const int ny = params.ny;
 
-  // TODO : call kernel
+  dim3 gridSize(nx/64,ny); 
+  dim3 blockSize(64);
+
+  // launch the kernel
+  compute_collision_kernel<<<gridSize, blockSize>>>(params,
+                                                    fin_d,
+                                                    feq_d,
+                                                    fout_d);
+
+  CUDA_KERNEL_CHECK("compute_collision_kernel");
+  cudaDeviceSynchronize();
 
 } // compute_collision
 
@@ -214,11 +242,17 @@ void update_obstacle(const LBMParams &params,
                      real_t* fout_d)
 {
 
-  // const int nx = params.nx;
-  // const int ny = params.ny;
+  const int nx = params.nx;
+  const int ny = params.ny;
 
-  // TODO : call kernel
+  dim3 gridSize(nx/64,ny); 
+  dim3 blockSize(64);
 
+  // launch the kernel
+  update_obstacle_kernel<<<gridSize, blockSize>>>(params, fin_d, obstacle_d, fout_d);
+
+  CUDA_KERNEL_CHECK("update_obstacle_kernel");
+  cudaDeviceSynchronize();
 } // update_obstacle
 
 // ======================================================
@@ -229,9 +263,16 @@ void streaming(const LBMParams& params,
                real_t* fin_d)
 {
 
-  // const int nx = params.nx;
-  // const int ny = params.ny;
+  const int nx = params.nx;
+  const int ny = params.ny;
 
-  // TODO : call kernel
+  dim3 gridSize(nx/64,ny); 
+  dim3 blockSize(64);
+
+  // launch the kernel
+  //streaming_kernel<<<gridSize, blockSize>>>(params, v, fout_d, fin_d);
+
+  CUDA_KERNEL_CHECK("streaming_kernel");
+  cudaDeviceSynchronize();
 
 } // streaming

@@ -111,7 +111,22 @@ __global__ void border_inflow_kernel(const LBMParams params,
                                      real_t *uy_d)
 {
 
-  // TODO
+  const int nx = params.nx;
+  const int ny = params.ny;
+
+  //corresponds to j in the sequential version
+  const int colidx = 64 * blockIdx.x + threadIdx.x;
+  
+  const int nxny = nx*ny;
+  const int i = 0;
+
+  int index = i + nx * colidx;
+
+  ux_d[index] = compute_vel(0, i, colidx, params.uLB, params.ly);
+  uy_d[index] = compute_vel(1, i, colidx, params.uLB, params.ly);
+  rho_d[index] = 1/(1-ux_d[index]) * 
+    (    fin_d[index+3*nxny] + fin_d[index+4*nxny] + fin_d[index+5*nxny] +
+      2*(fin_d[index+6*nxny] + fin_d[index+7*nxny] + fin_d[index+8*nxny]) );
 
 } // border_inflow_kernel
 
@@ -122,7 +137,23 @@ __global__ void update_fin_inflow_kernel(const LBMParams params,
                                          real_t *fin_d)
 {
 
-  // TODO
+  const int nx = params.nx;
+  const int ny = params.ny;
+
+  //corresponds to j in the sequential version
+  const int colidx = 64 * blockIdx.x + threadIdx.x;
+  
+  const int nxny = nx*ny;
+  const int i = 0;
+
+  int index = i + nx * colidx;
+  
+  //fin[[0,1,2],0,:] = feq[[0,1,2],0,:] + fin[[8,7,6],0,:] - feq[[8,7,6],0,:]
+
+  fin_d[index+0*nxny] = feq_d[index+0*nxny] + fin_d[index+8*nxny] - feq_d[index+8*nxny];
+  fin_d[index+1*nxny] = feq_d[index+1*nxny] + fin_d[index+7*nxny] - feq_d[index+7*nxny];
+  fin_d[index+2*nxny] = feq_d[index+2*nxny] + fin_d[index+6*nxny] - feq_d[index+6*nxny];
+
 
 } // border_inflow_kernel
 
@@ -134,7 +165,23 @@ __global__ void compute_collision_kernel(const LBMParams params,
                                          real_t *fout_d)
 {
 
-  // TODO
+  const int nx = params.nx;
+  const int ny = params.ny;
+  const int npop = LBMParams::npop;
+  const real_t omega = params.omega;
+
+  const int nxny = nx*ny;
+
+  //TODO 
+  int index = 64 * blockIdx.x + threadIdx.x + blockIdx.y * nx;
+
+  for (int ipop=0; ipop<npop; ++ipop) {
+
+    int index_f = index + ipop*nxny;
+
+    fout_d[index_f] = fin_d[index_f] - omega * (fin_d[index_f]-feq_d[index_f]);
+
+  } 
 
 } // compute_collision_kernel
 
@@ -145,8 +192,26 @@ __global__ void update_obstacle_kernel(const LBMParams params,
                                        const int *obstacle_d, 
                                        real_t *fout_d)
 {
+  const int nx = params.nx;
+  const int ny = params.ny;
+  const int npop = LBMParams::npop;
 
-  // TODO
+  const int nxny = nx*ny;
+
+  int index = 64 * blockIdx.x + threadIdx.x + blockIdx.y * nx;
+
+  if (obstacle_d[index]==1) {
+
+    for (int ipop = 0; ipop < npop; ++ipop) {
+
+      int index_out = index +    ipop  * nxny;
+      int index_in  = index + (8-ipop) * nxny;
+
+      fout_d[index_out] = fin_d[index_in];
+
+    } // end for ipop
+
+  } // end inside obstacle
 
 } // update_obstacle_kernel
 
@@ -158,7 +223,37 @@ __global__ void streaming_kernel(const LBMParams params,
                                  real_t *fin_d)
 {
 
-  // TODO
+  const int nx = params.nx;
+  const int ny = params.ny;
+  const int npop = LBMParams::npop;
+
+  const int nxny = nx*ny;
+
+  int i = 64 * blockIdx.x + threadIdx.x; //Col number
+  int j = blockIdx.y * nx; //Row number
+  int index = i+j;
+
+  for (int ipop = 0; ipop < npop; ++ipop) {
+
+    int index_in = index + ipop * nxny;
+
+    int i_out = i-v(ipop,0);
+    if (i_out<0)
+      i_out += nx;
+    if (i_out>nx-1)
+      i_out -= nx;
+
+    int j_out = j-v(ipop,1);
+    if (j_out<0)
+      j_out += ny;
+    if (j_out>ny-1)
+      j_out -= ny;
+
+    int index_out = i_out + nx*j_out + ipop*nxny;
+
+    fin_d[index_in] = fout_d[index_out];
+
+  } // end for ipop
 
 } // streaming_kernel
 
