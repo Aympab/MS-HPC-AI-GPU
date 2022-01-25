@@ -230,8 +230,8 @@ __global__ void streaming_kernel(const LBMParams params,
   const int nxny = nx*ny;
 
   int i = 64 * blockIdx.x + threadIdx.x; //Col number
-  int j = blockIdx.y * nx; //Row number
-  int index = i+j;
+  int j = blockIdx.y; //Row number
+  int index = i + nx * j;
 
   for (int ipop = 0; ipop < npop; ++ipop) {
 

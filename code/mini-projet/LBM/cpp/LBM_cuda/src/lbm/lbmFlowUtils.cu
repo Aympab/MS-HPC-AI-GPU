@@ -270,7 +270,7 @@ void streaming(const LBMParams& params,
   dim3 blockSize(64);
 
   // launch the kernel
-  //streaming_kernel<<<gridSize, blockSize>>>(params, v, fout_d, fin_d);
+  streaming_kernel<<<gridSize, blockSize>>>(params, v, fout_d, fin_d);
 
   CUDA_KERNEL_CHECK("streaming_kernel");
   cudaDeviceSynchronize();
