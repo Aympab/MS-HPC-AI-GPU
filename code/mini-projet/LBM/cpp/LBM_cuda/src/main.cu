@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   solver->run();
   timer->stop();
 
-  std::cout << timer->elapsed() << std::endl;
+  std::cout << "Duration (seconds) : " <<timer->elapsed() << std::endl;
   delete timer;
 
   delete solver;
