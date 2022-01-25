@@ -104,10 +104,10 @@ void LBMSolver::run()
   // time loop
   for (int iTime=0; iTime<params.maxIter; ++iTime) {
 
-    // if (iTime % 100 == 0) {
+    if (iTime % 100 == 0) {
       // output_png(iTime);
-      // output_vtk(iTime);
-    // }
+      output_vtk(iTime);
+    }
 
     // Right wall: outflow condition.
     // we only need here to specify distrib. function for velocities
@@ -149,6 +149,11 @@ void LBMSolver::output_png(int iTime)
   const int ny = params.ny;
 
   // TODO : copy data device to host
+  CUDA_API_CHECK( cudaMemcpy( ux, ux_d, nx*ny * sizeof(real_t),
+                            cudaMemcpyDeviceToHost ) );
+
+  CUDA_API_CHECK( cudaMemcpy( uy, uy_d, nx*ny * sizeof(real_t),
+                            cudaMemcpyDeviceToHost ) );
 
   real_t* u2 = (real_t *) malloc(nx*ny*sizeof(real_t));
 
@@ -216,7 +221,15 @@ void LBMSolver::output_vtk(int iTime)
 
   bool useAscii = false; // binary data leads to smaller files
 
-  // TODO : copy data device to host  
+  const int nx = params.nx;
+  const int ny = params.ny;
+
+  CUDA_API_CHECK( cudaMemcpy( ux, ux_d, nx*ny * sizeof(real_t),
+                            cudaMemcpyDeviceToHost ) );
+
+  CUDA_API_CHECK( cudaMemcpy( uy, uy_d, nx*ny * sizeof(real_t),
+                            cudaMemcpyDeviceToHost ) );
+
 
   saveVTK(rho, ux, uy, params, useAscii, iTime);
 
