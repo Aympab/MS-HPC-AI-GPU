@@ -50,12 +50,12 @@
  * \param[out] c output array
  * \param[in]  n array size
  */
-__global__ void add( int *a, int *b, int *c, int n )
+__global__ void add(int *a, int *b, int *c, int n)
 {
 
-  int i = /*  TODO */
+  int i = threadIdx.x + blockIdx.x*blockDim.x;
 
-  if ( /* TODO */ )
+  if (i < n)
     c[i] = a[i] + b[i];
 
 } // add
@@ -66,7 +66,7 @@ __global__ void add( int *a, int *b, int *c, int n )
 int main( int argc, char* argv[] )
 {
   // array size
-  int N = 16;
+  int N = 32;
 
   // host variables
   int *a, *b, *c;
@@ -84,19 +84,35 @@ int main( int argc, char* argv[] )
   }
 
   // GPU device memory allocation / initialization
-  CUDA_API_CHECK( cudaMalloc( /* TODO */ ) );
+  CUDA_API_CHECK( cudaMalloc((void**)&dev_a, N*sizeof(int)));
+  CUDA_API_CHECK( cudaMalloc((void**)&dev_b, N*sizeof(int)));
+  CUDA_API_CHECK( cudaMalloc((void**)&dev_c, N*sizeof(int)));
 
-  CUDA_API_CHECK( cudaMemcpy( /* TODO */ );
+  CUDA_API_CHECK( cudaMemcpy(dev_a, a, N*sizeof(int), cudaMemcpyHostToDevice));
+  CUDA_API_CHECK( cudaMemcpy(dev_b, b, N*sizeof(int), cudaMemcpyHostToDevice));
+
   
   // perform computation on GPU
-  int nbThreadsPerBlock = 8;
-  dim3 blockSize(nbThreadsPerBlock,1,1);
-  dim3 gridSize(N/nbThreadsPerBlock+1,1,1);
+  int nbThreadsPerBlock = 16;
+  // dim3 blockSize(nbThreadsPerBlock,1,1);
+  // dim3 gridSize(N/nbThreadsPerBlock+1,1,1);
+  // dim3 blockSize(nbThreadsPerBlock*3,1,1);
+  // dim3 gridSize(1,1,1);
+
+  // dim3 blockSize(N/2,1,1);
+  // dim3 gridSize(2,1,1);
+
+  // dim3 blockSize(N/4,1,1);
+  // dim3 gridSize(4,1,1);
+
+  dim3 blockSize(1,1,1);
+  dim3 gridSize(N,1,1);
+
   add<<<gridSize,blockSize>>>( dev_a, dev_b, dev_c, N );
   CUDA_KERNEL_CHECK("add");
 
   // get back computation result into host CPU memory
-  CUDA_API_CHECK( /* TODO */ );
+  CUDA_API_CHECK(cudaMemcpy(c, dev_c, N*sizeof(int), cudaMemcpyDeviceToHost));
 
   // output result on screen
   int passed=1;
@@ -118,7 +134,9 @@ int main( int argc, char* argv[] )
   free(a);
 
   // de-allocate GPU device memory
-  CUDA_API_CHECK( cudaFree( /* TODO */ ) );
+  CUDA_API_CHECK( cudaFree( dev_a) );
+  CUDA_API_CHECK( cudaFree( dev_b) );
+  CUDA_API_CHECK( cudaFree( dev_c) );
 
   return EXIT_SUCCESS;
 }

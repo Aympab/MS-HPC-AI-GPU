@@ -2,7 +2,8 @@
 #include <string>
 #include <iostream>
 
-#include "lbm/LBMSolver.h" 
+#include "lbm/LBMSolver.h"
+#include "utils/monitoring/SimpleTimer.h"
 
 // TODO : uncomment when building with OpenACC
 //#include "utils/openacc_utils.h"
@@ -28,11 +29,18 @@ int main(int argc, char* argv[])
   // print parameters on screen
   params.print();
 
+  // SimpleTimer *timer = new SimpleTimer;
+  SimpleTimer *timer = new SimpleTimer;
+  // timer.start(); 
+
   LBMSolver* solver = new LBMSolver(params);
 
   solver->run();
 
   delete solver;
+
+  timer -> stop();
+  std::cout << "Duration (seconds) : " <<timer->elapsed() << std::endl;
 
   return EXIT_SUCCESS;
 }

@@ -23,7 +23,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 ###### Flow definition #################################################
-maxIter = 200000  # Total number of time iterations.
+#On part d'une situation initiale ou tout est homogène, on va faire tant d'iétrations
+maxIter = 200000  # Total number of time iterations. 
 Re = 150.0         # Reynolds number.
 nx, ny = 420, 180 # Numer of lattice nodes.
 ly = ny-1         # Height of the domain in lattice units.
@@ -138,6 +139,7 @@ def main():
  
         # Visualization of the velocity.
         if (time%100==0):
+            print(time)
             plt.clf()
             plt.imshow(np.sqrt(u[0]**2+u[1]**2).transpose(), cmap=cm.Reds)
             plt.savefig("vel.{0:04d}.png".format(time//100))

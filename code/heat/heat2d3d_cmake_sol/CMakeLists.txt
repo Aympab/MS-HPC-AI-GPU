@@ -1,17 +1,17 @@
 # require cmake 3.18 for modern cmake cuda support
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+# cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 message("Using CMake version ${CMAKE_VERSION}")
 
 # CMP0104 is about CUDA_ARCHITECTURES
 # see https://cmake.org/cmake/help/latest/policy/CMP0104.html
-if(${CMAKE_VERSION} VERSION_LESS "3.18.0")
-    message("Using cmake policy CMP0104 OLD")
-    cmake_policy(SET CMP0104 OLD)
-else()
-    message("Using cmake policy CMP0104 NEW")
-    cmake_policy(SET CMP0104 NEW)
-endif()
+# if(${CMAKE_VERSION} VERSION_LESS "3.18.0")
+#     message("Using cmake policy CMP0104 OLD")
+#     cmake_policy(SET CMP0104 OLD)
+# else()
+#     message("Using cmake policy CMP0104 NEW")
+#     cmake_policy(SET CMP0104 NEW)
+# endif()
 
 project(heat_solver LANGUAGES CXX C)
 

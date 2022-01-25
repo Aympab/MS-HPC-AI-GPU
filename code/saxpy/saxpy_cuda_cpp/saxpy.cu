@@ -59,9 +59,10 @@ void saxpy_serial(int n, float alpha, const float *x, float *y)
 void saxpy_openmp(int n, float alpha, 
                   const float * x, float * y)
 {
-  
+  //ivdep veut dire que toutes les itérations de la 
+  //boucle for sont indépendantes, le compilateur ira à fond
   #pragma omp parallel for
-  #pragma ivdep
+  #pragma ivdep 
   for (size_t i=0; i<n; i++)
     y[i] = alpha*x[i] + y[i];
 }

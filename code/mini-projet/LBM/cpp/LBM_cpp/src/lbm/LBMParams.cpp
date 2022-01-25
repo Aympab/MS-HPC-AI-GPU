@@ -45,6 +45,7 @@ void LBMParams::print()
   printf( "##########################\n");
   printf( "Simulation run parameters:\n");
   printf( "##########################\n");
+  printf( "maxIter    : %d\n", maxIter);
   printf( "nx         : %d\n", nx);
   printf( "ny         : %d\n", ny);
   printf( "lx         : %f\n", lx);
