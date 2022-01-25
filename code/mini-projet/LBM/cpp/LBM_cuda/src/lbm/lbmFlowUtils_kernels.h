@@ -44,9 +44,11 @@ __global__ void equilibrium_kernel(const LBMParams params,
 
     int index_f = index + ipop * nx * ny;
     feq_d[index_f] = rho_d[index] * t(ipop) * (1 + cu + 0.5*cu*cu - usqr);
+  
+  // if(threadIdx.x == 0 && blockIdx.x==0 && blockIdx.y==132)
+  // printf("Th %d - Block %d,%d, - Index : %f\n",
+  //        threadIdx.x, blockIdx.x, blockIdx.y, feq_d[index_f]);
   }
-  // printf("Th %d - Block %d,%d, - Index : %d\n",
-  //        threadIdx.x, blockIdx.x, blockIdx.y, index);
 
 
 } // equilibrium_kernel
@@ -54,10 +56,26 @@ __global__ void equilibrium_kernel(const LBMParams params,
 // ================================================================
 // ================================================================
 __global__ void border_outflow_kernel(const LBMParams params, 
-                                      real_t *fin_d)
+                                      real_t* fin_d)
 {
 
-  // TODO
+  const int nx = params.nx;
+  const int ny = params.ny;
+
+  //corresponds to j in the sequential version
+  const int colidx = 64 * blockIdx.x + threadIdx.x;// * nx;// * npop;
+  
+  const int nxny = nx*ny;
+
+  const int i1 = nx-1;
+  const int i2 = nx-2;
+
+  int index1 = i1 + nx * colidx;
+  int index2 = i2 + nx * colidx;
+
+  fin_d[index1 + 6*nxny] = fin_d[index2 + 6*nxny];
+  fin_d[index1 + 7*nxny] = fin_d[index2 + 7*nxny];
+  fin_d[index1 + 8*nxny] = fin_d[index2 + 8*nxny];
 
 } // border_outflow_kernel
 

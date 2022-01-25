@@ -36,9 +36,6 @@ void equilibrium(const LBMParams& params,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  //64 is the number of CUDA cores in each SM of our GPU
-  if(nx % 64 != 0) throw std::invalid_argument("nx must be divisible by 64");
-
   // TODO : call kernel 
   /*We want nx/64 * ny blocks, each with 64 threads
   each thread will do the loop on npop = 9
@@ -53,6 +50,7 @@ void equilibrium(const LBMParams& params,
                                               uy_d,
                                               feq_d);
 
+  cudaDeviceSynchronize();
 } // equilibrium
 
 // ======================================================
@@ -87,6 +85,7 @@ void init_obstacle_mask(const LBMParams& params,
   CUDA_API_CHECK( cudaMemcpy( obstacle_d, obstacle, nx*ny * sizeof(int),
                             cudaMemcpyHostToDevice ) );
 
+  cudaDeviceSynchronize();
 } // init_obstacle_mask
 
 // ======================================================
@@ -136,14 +135,31 @@ void initialize_macroscopic_variables(const LBMParams& params,
   CUDA_API_CHECK( cudaMemcpy( uy_d, uy, nx*ny * sizeof(real_t),
                             cudaMemcpyHostToDevice ) );
 
+  cudaDeviceSynchronize();
 } // initialize_macroscopic_variables
 
 // ======================================================
 // ======================================================
 void border_outflow(const LBMParams& params, real_t* fin_d)
-{
+{ 
+  // const int nx = params.nx;
+  const int ny = params.ny;
 
-  // TODO : call kernel
+  /*Here we give 64 rows to 64 threads in 1 grid, they will all
+  update one row
+    fin[index1 + 6*nxny] = fin[index2 + 6*nxny];
+    fin[index1 + 7*nxny] = fin[index2 + 7*nxny];
+    fin[index1 + 8*nxny] = fin[index2 + 8*nxny];
+  
+  TODO : optimize this one by splitting both my row and cols
+  */
+  dim3 gridSize(ny/64); 
+  dim3 blockSize(64);
+
+  border_outflow_kernel<<<gridSize, blockSize>>>(params, fin_d);
+  
+  CUDA_KERNEL_CHECK("border_outflow_kernel");
+  cudaDeviceSynchronize();
 
 } // border_outflow
 

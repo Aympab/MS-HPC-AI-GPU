@@ -29,6 +29,10 @@ int main(int argc, char* argv[])
 
   LBMSolver* solver = new LBMSolver(params);
 
+  //64 is the number of CUDA cores in each SM of our GPU
+  if(params.nx % 64 != 0 || params.ny % 64 != 0)
+    throw std::invalid_argument("nx and ny must be divisible by 64");
+
   SimpleTimer* timer = new SimpleTimer;
   solver->run();
   timer->stop();
