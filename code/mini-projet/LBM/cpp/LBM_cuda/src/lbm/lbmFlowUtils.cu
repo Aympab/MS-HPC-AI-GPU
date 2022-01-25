@@ -15,10 +15,20 @@ void macroscopic(const LBMParams& params,
                  real_t* uy_d)
 {
 
-  // const int nx = params.nx;
-  // const int ny = params.ny;
+  const int nx = params.nx;
+  const int ny = params.ny;
 
-  // TODO : call kernel
+  dim3 gridSize(nx/64,ny); 
+  dim3 blockSize(64);
+
+  macroscopic_kernel<<<gridSize, blockSize>>>(params,
+                                              v,
+                                              fin_d,
+                                              rho_d,
+                                              ux_d,
+                                              uy_d);
+
+  cudaDeviceSynchronize();
 
 } // macroscopic
 
@@ -36,7 +46,6 @@ void equilibrium(const LBMParams& params,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  // TODO : call kernel 
   /*We want nx/64 * ny blocks, each with 64 threads
   each thread will do the loop on npop = 9
   */

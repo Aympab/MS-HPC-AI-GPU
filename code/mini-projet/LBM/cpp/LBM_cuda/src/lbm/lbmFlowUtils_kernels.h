@@ -11,8 +11,32 @@ void macroscopic_kernel(const LBMParams params,
                         real_t* ux_d,
                         real_t* uy_d)
 {
+  const int nx = params.nx;
+  const int ny = params.ny;
+  const int npop = LBMParams::npop;
 
-  // TODO
+  int base_index = 64 * blockIdx.x + threadIdx.x + blockIdx.y * nx;
+  // int base_index = i + nx*j; 
+
+  real_t rho_tmp = 0;
+  real_t ux_tmp  = 0;
+  real_t uy_tmp  = 0;
+  for (int ipop = 0; ipop < npop; ++ipop) {
+    
+    int index = base_index + ipop*nx*ny;
+
+    // Oth order moment
+    rho_tmp +=             fin_d[index];
+
+    // 1st order moment
+    ux_tmp  += v(ipop,0) * fin_d[index];
+    uy_tmp  += v(ipop,1) * fin_d[index];
+
+  } // end for ipop
+
+  rho_d[base_index] = rho_tmp;
+  ux_d[base_index]  = ux_tmp/rho_tmp;
+  uy_d[base_index]  = uy_tmp/rho_tmp;
 
 } // macroscopic_kernel
 
@@ -32,7 +56,6 @@ __global__ void equilibrium_kernel(const LBMParams params,
   const int npop = LBMParams::npop;
 
   //TODO 
-  
   int index = 64 * blockIdx.x + threadIdx.x + blockIdx.y * nx;
 
   real_t usqr = 3.0 / 2 * (ux_d[index] * ux_d[index] +
