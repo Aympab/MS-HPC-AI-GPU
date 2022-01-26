@@ -29,18 +29,21 @@ int main(int argc, char* argv[])
 
   const int nx = params.nx;
   const int ny = params.ny;
+  const int maxIter = params.maxIter;
 
-  /*N is the total number of elements, we have : 
-        - 3 arrays of size nxny*npop (double or float)
-        - 3 arrays of size nxny (double or float)
-        - 1 array of size nxny (int)
+  /*Here is the total number of elements, we have : 
+        - 3 arrays of size nxny*npop -> size_f (double or float)
+        - 3 arrays of size nxny      -> size_n (double or float)
+        - 1 array of size nxny       -> size_n (int)
   */
-  unsigned long N = nx * ny * LBMParams::npop * 3 \
-                  + nx * ny * 3; 
+  unsigned long size_f = nx * ny * LBMParams::npop;
+  unsigned long size_n = nx * ny;
 
-  unsigned long numBytes = 2.0*(N*sizeof(real_t) \
-                               + nx*ny*sizeof(int));
-
+  unsigned long numBytes = \
+                sizeof(real_t)*(3*size_f + 3*size_n) \
+              + sizeof(int)*size_n;
+  numBytes *= 2.0; //for read and write
+  numBytes *= maxIter;
 
   /*64 is the number of CUDA cores in each SM of our GPU
   we are going to divide nx by 64 to get how many block we want in our
@@ -61,29 +64,47 @@ int main(int argc, char* argv[])
 
   gpuTimer.stop();
 
-  printf("GPU CODE (CUDA): %ld elements, %10.6f (s) in total, %10.6f (s) by iteration, total %f GB/s\n",
-         N,
-         gpuTimer.elapsed(),
-         gpuTimer.elapsed()/params.maxIter,
-         1e-9*numBytes*params.maxIter/gpuTimer.elapsed());
-
-
-  // print bandwidth:
-  {
-    printf("\nbandwidth is %f GBytes (%f)/s\n",
-	   1e-9*numBytes/gpuTimer.elapsed(),
-	   gpuTimer.elapsed() );
-  }
-
-  // print peak bandwidth
   {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
+    auto theorical_bandwith = 2.0*deviceProp.memoryClockRate*(deviceProp.memoryBusWidth/8)/1.0e6;
+    printf("\nPeak Memory Bandwidth (GB/s): %f\n", theorical_bandwith);
 
-    printf("  Peak Memory Bandwidth (GB/s): %f\n",
-	   2.0*deviceProp.memoryClockRate*(deviceProp.memoryBusWidth/8)/1.0e6);    
+
+    /*
+      for 1 iteration, these are the number of time we use each array :
+          - 7 : fin
+          - 3 : rho, ux, uy, fout, feq
+          - 1 : obstacle
+    */
+    unsigned long numOpe = \
+                  (7*size_f + 3*(2*size_f) + 3*(3*size_n)) \
+                + (size_n);
+    numOpe *= 2.0; //for read and write
+    numOpe *= maxIter-1; //to get the total number of flop
+
+    float time = gpuTimer.elapsed();
+    float gbs = 1e-9*numBytes/time;
+    float proportion = 100*gbs/theorical_bandwith;
+
+
+    printf("GPU CODE (CUDA): %d elements, %10.6f (s) in total, %10.6f (s) by iteration, total %f GB/s (%3.2f %% of total)\n",
+          nx*ny,
+          time,
+          time/maxIter,
+          gbs,
+          proportion);
+
+    float gflops = numOpe/(time*1e9);
+    std::cout << gflops << " GFLOP/s (approx)" << std::endl;
+    /*for parsing purpose to plot on python :
+      to_parse;size;nbIte;time;bandwith;prop;gflop
+    */
+    printf("to_parse;%d;%d;%f;%f;%3.5f;%f\n", nx*ny, maxIter,time,gbs,proportion,gflops);
+    // print peak bandwidth
+
   }
-  
+
   delete solver;
   return EXIT_SUCCESS;
 }

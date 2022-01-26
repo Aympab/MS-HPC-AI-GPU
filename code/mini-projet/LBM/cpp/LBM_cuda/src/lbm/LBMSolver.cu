@@ -44,6 +44,10 @@ LBMSolver::LBMSolver(const LBMParams& params) :
   obstacle = (int *) malloc(nx*ny * sizeof(int));
   CUDA_API_CHECK( cudaMalloc((void**)&obstacle_d, nx*ny *sizeof(int)));
 
+  /*Initializing here for profiling, probably not the safest/cleanest 
+    thing to do*/
+  initialize();
+
 } // LBMSolver::LBMSolver
 
 // ======================================================
@@ -99,14 +103,17 @@ void LBMSolver::initialize()
 void LBMSolver::run()
 {
 
-  initialize();
+  /*Moving the initialize method iin the constructor so we don't mesure
+  this time in the profiling
+  */
+  //initialize();
 
   // time loop
   for (int iTime=0; iTime<params.maxIter; ++iTime) {
 
     // if (iTime % 100 == 0) {
     //   output_png(iTime);
-    //   output_vtk(iTime);
+    //   // output_vtk(iTime);c
     // }
 
     // Right wall: outflow condition.

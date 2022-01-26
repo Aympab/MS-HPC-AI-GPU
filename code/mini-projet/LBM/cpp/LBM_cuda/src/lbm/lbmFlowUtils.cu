@@ -6,6 +6,8 @@
 #include "cuda_error.h"
 #include "../utils/monitoring/CudaTimer.h"
 
+#define NB_THREADS_SM 64
+
 // ======================================================
 // ======================================================
 void macroscopic(const LBMParams& params, 
@@ -19,8 +21,8 @@ void macroscopic(const LBMParams& params,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  dim3 gridSize(nx/64,ny); 
-  dim3 blockSize(64);
+  dim3 gridSize(nx/NB_THREADS_SM,ny); 
+  dim3 blockSize(NB_THREADS_SM);
 
   macroscopic_kernel<<<gridSize, blockSize>>>(params,
                                               v,
@@ -50,8 +52,8 @@ void equilibrium(const LBMParams& params,
   /*We want nx/64 * ny blocks, each with 64 threads
   each thread will do the loop on npop = 9
   */
-  dim3 gridSize(nx/64,ny); 
-  dim3 blockSize(64);
+  dim3 gridSize(nx/NB_THREADS_SM,ny); 
+  dim3 blockSize(NB_THREADS_SM);
 
   // launch the kernel
   equilibrium_kernel<<<gridSize, blockSize>>>(params, v, t,
@@ -61,7 +63,7 @@ void equilibrium(const LBMParams& params,
                                               feq_d);
 
   CUDA_KERNEL_CHECK("equilibrium_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 } // equilibrium
 
 // ======================================================
@@ -97,7 +99,6 @@ void init_obstacle_mask(const LBMParams& params,
   CUDA_API_CHECK( cudaMemcpy( obstacle_d, obstacle, nx*ny * sizeof(int),
                             cudaMemcpyHostToDevice ) );
 
-  cudaDeviceSynchronize();
 } // init_obstacle_mask
 
 // ======================================================
@@ -148,7 +149,6 @@ void initialize_macroscopic_variables(const LBMParams& params,
   CUDA_API_CHECK( cudaMemcpy( uy_d, uy, nx*ny * sizeof(real_t),
                             cudaMemcpyHostToDevice ) );
 
-  cudaDeviceSynchronize();
 } // initialize_macroscopic_variables
 
 // ======================================================
@@ -169,13 +169,13 @@ void border_outflow(const LBMParams& params, real_t* fin_d)
   the next sizeof(real_t)/5120 (80 for double, 160 for float) values,
   thus feeding the next 64 threads, this can probably be optimized
   */
-  dim3 gridSize(ny/64); 
-  dim3 blockSize(64);
+  dim3 gridSize(ny/NB_THREADS_SM); 
+  dim3 blockSize(NB_THREADS_SM);
 
   border_outflow_kernel<<<gridSize, blockSize>>>(params, fin_d);
   
   CUDA_KERNEL_CHECK("border_outflow_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 
 } // border_outflow
 
@@ -187,13 +187,13 @@ void border_inflow(const LBMParams& params, const real_t* fin_d,
 
   const int ny = params.ny;
   
-  dim3 gridSize(ny/64); 
-  dim3 blockSize(64);
+  dim3 gridSize(ny/NB_THREADS_SM); 
+  dim3 blockSize(NB_THREADS_SM);
 
   border_inflow_kernel<<<gridSize, blockSize>>>(params, fin_d, rho_d, ux_d, uy_d);
 
   CUDA_KERNEL_CHECK("border_inflow_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 
 } // border_inflow
 
@@ -205,14 +205,14 @@ void update_fin_inflow(const LBMParams& params, const real_t* feq_d,
 
   const int ny = params.ny;
   
-  dim3 gridSize(ny/64); 
-  dim3 blockSize(64);
+  dim3 gridSize(ny/NB_THREADS_SM); 
+  dim3 blockSize(NB_THREADS_SM);
 
   update_fin_inflow_kernel<<<gridSize, blockSize>>>(params, feq_d, fin_d);
 
 
   CUDA_KERNEL_CHECK("update_fin_inflow_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 } // update_fin_inflow
   
 // ======================================================
@@ -226,8 +226,8 @@ void compute_collision(const LBMParams& params,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  dim3 gridSize(nx/64,ny); 
-  dim3 blockSize(64);
+  dim3 gridSize(nx/NB_THREADS_SM,ny); 
+  dim3 blockSize(NB_THREADS_SM);
 
   // launch the kernel
   compute_collision_kernel<<<gridSize, blockSize>>>(params,
@@ -236,7 +236,7 @@ void compute_collision(const LBMParams& params,
                                                     fout_d);
 
   CUDA_KERNEL_CHECK("compute_collision_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 
 } // compute_collision
 
@@ -251,14 +251,14 @@ void update_obstacle(const LBMParams &params,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  dim3 gridSize(nx/64,ny); 
-  dim3 blockSize(64);
+  dim3 gridSize(nx/NB_THREADS_SM,ny); 
+  dim3 blockSize(NB_THREADS_SM);
 
   // launch the kernel
   update_obstacle_kernel<<<gridSize, blockSize>>>(params, fin_d, obstacle_d, fout_d);
 
   CUDA_KERNEL_CHECK("update_obstacle_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 } // update_obstacle
 
 // ======================================================
@@ -272,13 +272,13 @@ void streaming(const LBMParams& params,
   const int nx = params.nx;
   const int ny = params.ny;
 
-  dim3 gridSize(nx/64,ny); 
-  dim3 blockSize(64);
+  dim3 gridSize(nx/NB_THREADS_SM,ny); 
+  dim3 blockSize(NB_THREADS_SM);
 
   // launch the kernel
   streaming_kernel<<<gridSize, blockSize>>>(params, v, fout_d, fin_d);
 
   CUDA_KERNEL_CHECK("streaming_kernel");
-  cudaDeviceSynchronize();
+  //cudaDeviceSynchronize();
 
 } // streaming
