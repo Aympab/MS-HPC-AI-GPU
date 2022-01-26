@@ -106,7 +106,7 @@ void LBMSolver::run()
 
     // if (iTime % 100 == 0) {
     //   output_png(iTime);
-    //   // output_vtk(iTime);
+    //   output_vtk(iTime);
     // }
 
     // Right wall: outflow condition.
@@ -161,6 +161,7 @@ void LBMSolver::output_png(int iTime)
   real_t min_value = sqrt(ux[0]*ux[0] + uy[0]*uy[0]);
   real_t max_value = min_value;
   for (int j = 0; j < ny; ++j) {
+    #pragma omp parallel for
     for (int i = 0; i < nx; ++i) {
 
       int index = i + nx * j;

@@ -4,6 +4,7 @@
 
 #include "lbmFlowUtils_kernels.h"
 #include "cuda_error.h"
+#include "../utils/monitoring/CudaTimer.h"
 
 // ======================================================
 // ======================================================
@@ -79,6 +80,7 @@ void init_obstacle_mask(const LBMParams& params,
   const real_t r = params.r;
 
   for (int j = 0; j < ny; ++j) {
+    #pragma omp parallel for
     for (int i = 0; i < nx; ++i) {
 
       int index = i + nx * j;
@@ -124,6 +126,7 @@ void initialize_macroscopic_variables(const LBMParams& params,
   const int ny = params.ny;
 
   for (int j = 0; j < ny; ++j) {
+    #pragma omp parallel for
     for (int i = 0; i < nx; ++i) {
 
       int index = i + nx * j;
@@ -156,12 +159,15 @@ void border_outflow(const LBMParams& params, real_t* fin_d)
   const int ny = params.ny;
 
   /*Here we give 64 rows to 64 threads in 1 grid, they will all
-  update one row
+  run this code :
+
     fin[index1 + 6*nxny] = fin[index2 + 6*nxny];
     fin[index1 + 7*nxny] = fin[index2 + 7*nxny];
     fin[index1 + 8*nxny] = fin[index2 + 8*nxny];
-  
-  TODO : optimize this one by splitting both my row and cols
+
+  when the bus will take fin[index1 + 6*nxny], it will get as well all
+  the next sizeof(real_t)/5120 (80 for double, 160 for float) values,
+  thus feeding the next 64 threads, this can probably be optimized
   */
   dim3 gridSize(ny/64); 
   dim3 blockSize(64);
