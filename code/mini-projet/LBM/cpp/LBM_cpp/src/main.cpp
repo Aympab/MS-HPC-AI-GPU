@@ -40,7 +40,20 @@ int main(int argc, char* argv[])
   delete solver;
 
   timer -> stop();
-  std::cout << "Duration (seconds) : " <<timer->elapsed() << std::endl;
+  std::cout << "Duration (seconds) : " << timer->elapsed() << std::endl;
+  
+
+  {
+    unsigned long size_f = params.nx * params.ny * LBMParams::npop;
+    unsigned long size_n = params.nx * params.ny;
+    unsigned long numBytes = \
+                sizeof(real_t)*(3*size_f + 3*size_n) \
+              + sizeof(int)*size_n;
+    numBytes *= 2.0; //for read and write
+    numBytes *= params.maxIter;
+    float gbs = 1e-9*numBytes/timer->elapsed();
+    printf("to_parse;%d;%d;%f;%f\n", params.nx*params.ny, params.maxIter,timer->elapsed(),gbs);
+  }
 
   return EXIT_SUCCESS;
 }

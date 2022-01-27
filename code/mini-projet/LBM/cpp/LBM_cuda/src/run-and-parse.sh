@@ -11,12 +11,14 @@ rm $csvfile
 
 echo "size;nbIte;time;bandwith;prop;gflop" > $csvfile
 
-array=( 256 512 1024 2048 4096 8192 16384 32768 65536 ) #nx
-array2=( 64 128 256 512 1024 2048 4096 8192 16384) #ny
+array=( 256 512 1024 2048 4096 8192 16384 ) # 32768 65536 ) #nx
+array2=( 64 128 256 512 1024 2048 4096 ) # 8192 16384) #ny
 
 for i in "${!array[@]}"; do
   nx=${array[i]}
   ny=${array2[i]}
+
+  echo "Loop $i... nx=$nx ny=$ny"
 
   sed -i "11s/.*/nx=$nx/" flowAroundCylinder.ini #nx is on the 11th line
   sed -i "12s/.*/ny=$ny/" flowAroundCylinder.ini #ny is on the 12th line
