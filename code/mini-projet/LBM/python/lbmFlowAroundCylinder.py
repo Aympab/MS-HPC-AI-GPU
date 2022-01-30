@@ -17,14 +17,14 @@
 # Please note that Wet-node open boundary conditions is a special case of
 # solid boundary (see section 5.3.4)
 #
-
+from time import perf_counter 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
 ###### Flow definition #################################################
-#On part d'une situation initiale ou tout est homogène, on va faire tant d'iétrations
-maxIter = 200000  # Total number of time iterations. 
+#On part d'une situation initiale ou tout est homogène, on va faire tant d'iterations
+maxIter = 2000  # Total number of time iterations. 
 Re = 150.0         # Reynolds number.
 nx, ny = 420, 180 # Numer of lattice nodes.
 ly = ny-1         # Height of the domain in lattice units.
@@ -104,45 +104,69 @@ def main():
     # with the given velocity.
     fin = equilibrium(1, vel)
 
+    start_t = perf_counter()
     ###### Main time loop ########
     for time in range(maxIter):
 
         # Right wall: outflow condition.
         # we only need here to specify distrib. function for velocities
         # that enter the domain (other that go out, are set by the streaming step)
-        fin[col3,nx-1,:] = fin[col3,nx-2,:] 
+        fin[6,nx-1,:] = fin[6,nx-2,:]
+        fin[7,nx-1,:] = fin[7,nx-2,:]
+        fin[8,nx-1,:] = fin[8,nx-2,:]
 
         # Compute macroscopic variables, density and velocity.
         rho, u = macroscopic(fin)
 
         # Left wall: inflow condition.
         u[:,0,:] = vel[:,0,:]
-        rho[0,:] = 1/(1-u[0,0,:]) * ( np.sum(fin[col2,0,:], axis=0) +
-                                      2*np.sum(fin[col3,0,:], axis=0) )
+
+        # rho[0,:] = 1/(1-u[0,0,:]) * ( np.sum(fin[col2,0,:], axis=0) +
+        #                               2*np.sum(fin[col3,0,:], axis=0) )
+
+        v1 = np.sum(fin[3,0,:], axis=0)
+        v1 += np.sum(fin[4,0,:], axis=0)
+        v1 += np.sum(fin[5,0,:], axis=0)
+
+        v2 = np.sum(fin[6,0,:], axis=0)
+        v2 += np.sum(fin[7,0,:], axis=0)
+        v2 += np.sum(fin[8,0,:], axis=0)
+        v2 *= 2
+
+        rho[0,:] = 1/(1-u[0,0,:]) * (v1+v2)
         
         # Compute equilibrium.
         feq = equilibrium(rho, u)
-        fin[[0,1,2],0,:] = feq[[0,1,2],0,:] + fin[[8,7,6],0,:] - feq[[8,7,6],0,:]
+ 
+        # fin[[0,1,2],0,:] = feq[[0,1,2],0,:] + fin[[8,7,6],0,:] - feq[[8,7,6],0,:]
+        fin[0,0,:] = feq[0,0,:] + fin[8,0,:] - feq[8,0,:]
+        fin[1,0,:] = feq[1,0,:] + fin[7,0,:] - feq[7,0,:]
+        fin[2,0,:] = feq[2,0,:] + fin[6,0,:] - feq[6,0,:]
+
+
 
         # Collision step.
         fout = fin - omega * (fin - feq)
 
         # Bounce-back condition for obstacle.
         # in python language, we "slice" fout by obstacle
-        for i in range(9):
-            fout[i, obstacle] = fin[8-i, obstacle]
+        # for i in range(9):
+        #     fout[i, obstacle] = fin[8-i, obstacle]
 
         # Streaming step.
         for i in range(9):
             fin[i,:,:] = np.roll(np.roll(fout[i,:,:], v[i,0], axis=0),
                                  v[i,1], axis=1 )
  
-        # Visualization of the velocity.
-        if (time%100==0):
-            print(time)
-            plt.clf()
-            plt.imshow(np.sqrt(u[0]**2+u[1]**2).transpose(), cmap=cm.Reds)
-            plt.savefig("vel.{0:04d}.png".format(time//100))
+        # # Visualization of the velocity.
+        # if (time%100==0):
+        #     print(time)
+        #     plt.clf()
+        #     plt.imshow(np.sqrt(u[0]**2+u[1]**2).transpose(), cmap=cm.Reds)
+        #     plt.savefig("vel.{0:04d}.png".format(time//100))
+
+    stop_t = perf_counter()
+    print("Elapsed time:", stop_t-start_t)  
 
 if __name__ == "__main__":
     # execute only if run as a script
