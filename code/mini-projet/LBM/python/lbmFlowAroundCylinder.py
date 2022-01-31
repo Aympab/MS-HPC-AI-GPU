@@ -150,8 +150,8 @@ def main():
 
         # Bounce-back condition for obstacle.
         # in python language, we "slice" fout by obstacle
-        # for i in range(9):
-        #     fout[i, obstacle] = fin[8-i, obstacle]
+        for i in range(9):
+            fout[i, obstacle] = fin[8-i, obstacle]
 
         # Streaming step.
         for i in range(9):

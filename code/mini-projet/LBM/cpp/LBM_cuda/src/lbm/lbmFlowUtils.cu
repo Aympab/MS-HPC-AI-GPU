@@ -31,7 +31,7 @@ void macroscopic(const LBMParams& params,
                                               ux_d,
                                               uy_d);
 
-  cudaDeviceSynchronize();
+  // cudaDeviceSynchronize();
 
 } // macroscopic
 

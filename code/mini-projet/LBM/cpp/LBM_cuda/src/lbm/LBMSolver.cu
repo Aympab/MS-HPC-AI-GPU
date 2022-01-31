@@ -108,13 +108,13 @@ void LBMSolver::run()
   */
   //initialize();
 
-  // time loop
+  // // time loop
   for (int iTime=0; iTime<params.maxIter; ++iTime) {
 
-    // if (iTime % 100 == 0) {
-    //   output_png(iTime);
-    //   // output_vtk(iTime);c
-    // }
+  //   if (iTime % 100 == 0) {
+  //     output_png(iTime);
+  //     // output_vtk(iTime);c
+  //   }
 
     // Right wall: outflow condition.
     // we only need here to specify distrib. function for velocities
