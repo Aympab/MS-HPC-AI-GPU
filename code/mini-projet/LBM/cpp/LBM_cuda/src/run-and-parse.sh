@@ -20,8 +20,8 @@ for i in "${!array[@]}"; do
 
   echo "Loop $i... nx=$nx ny=$ny"
 
-  sed -i "11s/.*/nx=$nx/" flowAroundCylinder.ini #nx is on the 11th line
-  sed -i "12s/.*/ny=$ny/" flowAroundCylinder.ini #ny is on the 12th line
+  sed -i "11s/.*/nx=$nx/" inifile #nx is on the 11th line
+  sed -i "12s/.*/ny=$ny/" inifile #ny is on the 12th line
 
   ./lbmFlowAroundCylinder > tmp_log
 

@@ -1,0 +1,9 @@
+﻿kernel;448x192;2048x6912
+equilibrium;24,79;81,21
+border_outflow;3,07;3,02
+border_inflow;3,02;2,86
+macroscopic;29,84;94,1
+update_fin_inflow;3,05;3,02
+compute_collision;35,1;98,15
+update_obstacle;10,72;52,56
+streaming;34,55;97,28
